@@ -337,8 +337,8 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
         boolean hasValidRangeCard = false;
         for (int slot : UPGRADE_SLOTS) {
             ItemStack stack = itemHandler.getStackInSlot(slot);
-            if (stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get())) {
-                int range = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get(), ModConfigs.terraformDefaultArea);
+            if (stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get())) {
+                int range = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), ModConfigs.terraformDefaultArea);
                 if (range > 0) {
                     hasValidRangeCard = true;
                     break;
