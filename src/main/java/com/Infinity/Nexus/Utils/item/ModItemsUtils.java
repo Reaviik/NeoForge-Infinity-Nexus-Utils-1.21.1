@@ -13,12 +13,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModItemsUtils {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(InfinityNexusUtils.MOD_ID);
 
-    public static final DeferredItem<Item> TERRAFORM_RANGE_UPGRADE = ITEMS.register("terraform_range_upgrade",() -> new UpgradeItem(new Item.Properties()
-            .rarity(Rarity.COMMON)
-            .stacksTo(1)
-            .component(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE, ModConfigs.terraformDefaultArea)
-            .component(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT, ModConfigs.terraformDefaultArea)));
-
+    public static final DeferredItem<Item> TERRAFORM_RANGE_UPGRADE = ITEMS.register("terraform_range_upgrade",() -> new UpgradeItem(new Item.Properties().rarity(Rarity.COMMON).stacksTo(1).component(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE, ModConfigs.terraformDefaultArea)));
     public static final DeferredItem<Item> TERRAFORM_CLEAR_UPGRADE = ITEMS.register("terraform_clear_upgrade",() -> new UpgradeItem(new Item.Properties().rarity(Rarity.COMMON).stacksTo(1)));
     public static final DeferredItem<Item> TERRAFORM_PLACER_UPGRADE = ITEMS.register("terraform_placer_upgrade",() -> new UpgradeItem(new Item.Properties().rarity(Rarity.COMMON).stacksTo(1)));
     public static final DeferredItem<Item> TERRAFORM_MINER_UPGRADE = ITEMS.register("terraform_miner_upgrade",() -> new UpgradeItem(new Item.Properties().rarity(Rarity.COMMON).stacksTo(1)));

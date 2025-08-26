@@ -30,8 +30,7 @@ public class UpgradeItem extends com.Infinity.Nexus.Core.items.custom.UpgradeIte
         if (Screen.hasShiftDown()) {
             if(stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get())) {
                 int range = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), ModConfigs.terraformDefaultArea);
-                int persistentRange = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get(), ModConfigs.terraformDefaultArea);
-                components.add(Component.translatable("item.infinity_nexus_terraform.range_description").append(" §5" + range + "§f/§5" + persistentRange));
+                components.add(Component.translatable("item.infinity_nexus_terraform.range_description").append(" §5" + range));
                 components.add(Component.translatable("tooltip.infinity_nexus_utils.range_card_mode_change"));
                 components.add(ModUtilsUtils.getRangeCardType(stack));
                 if (stack.is(ModItemsUtils.TERRAFORM_PLACER_UPGRADE.get())) {
@@ -61,7 +60,6 @@ public class UpgradeItem extends com.Infinity.Nexus.Core.items.custom.UpgradeIte
     public void onCraftedBy(ItemStack stack, Level level, Player player) {
         if(stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get())) {
             stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), ModConfigs.terraformDefaultArea);
-            stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get(), ModConfigs.terraformDefaultArea);
         }
         super.onCraftedBy(stack, level, player);
     }

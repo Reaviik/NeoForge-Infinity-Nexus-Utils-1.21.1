@@ -241,6 +241,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
     @Override
     public void onLoad() {
         GetFakePlayer.resetFakePlayer();
+        System.out.println("onTerraformLoad");
         super.onLoad();
     }
 
@@ -249,15 +250,10 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
             return;
         }
 
-        if(!ModUtils.isComponent(itemHandler.getStackInSlot(COMPONENT_SLOT))) {
-            return;
-        }
-
         boolean redstonePowered = isRedstonePowered(pPos);
         if (redstonePowered && !lastRedstonePowered) {
             setTerraformingEnabled(!isTerraformingEnabled());
         }
-
         lastRedstonePowered = redstonePowered;
 
         if (!terraformingEnabled) {
@@ -274,37 +270,18 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
             return;
         }
 
-        int speedUpgrades = ModUtilsUtils.getUpgradeCount(itemHandler, UPGRADE_SLOTS, ModItems.SPEED_UPGRADE.get());
-        int componentLevel = ModUtils.getComponentLevel(itemHandler.getStackInSlot(COMPONENT_SLOT));
-        int blocksToProcess = componentLevel + speedUpgrades;
-
-        boolean finished = false;
-        for (int i = 0; i < blocksToProcess && !finished; i++) {
-            finished = processNextBlock();
-            if (finished) {
-                setTerraformingEnabled(false);
-            }
-        }
-
+        boolean finished = processNextBlock();
+        extractEnergy();
         resetProgress();
         setMaxProgress();
         sendItems(pLevel);
-        ModUtils.useComponent(itemHandler.getStackInSlot(COMPONENT_SLOT), level, worldPosition);
-    }
-
-    private BlockPos getLinkedPos() {
-        BlockPos pos = itemHandler.getStackInSlot(LINK_SLOT).getOrDefault(CoreDataComponents.LINKINGTOOL_COORDS.get(), new BlockPos(0, 0, 0));
-        return pos;
-    }
-
-    private IItemHandler getLinkedInventory() {
-        BlockPos pos = getLinkedPos();
-        if(pos.getY() == 0 && pos.getX() == 0 && pos.getZ() == 0) return null;
-        return ItemStackHandlerUtils.getBlockCapabilityItemHandler(level, pos, Direction.UP);
+        if (finished) {
+            setTerraformingEnabled(false);
+        }
     }
 
     private void sendItems(Level level) {
-        BlockPos pos = getLinkedPos();
+        BlockPos pos = itemHandler.getStackInSlot(LINK_SLOT).getOrDefault(CoreDataComponents.LINKINGTOOL_COORDS.get(), new BlockPos(0, 0, 0));
         if(pos.getY() == 0 && pos.getX() == 0 && pos.getZ() == 0) {
             ModUtils.ejectItemsWhePusher(worldPosition, UPGRADE_SLOTS, OUTPUT_SLOTS, itemHandler, level);
             return;
@@ -312,7 +289,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
         if(hasEmptySlot() || ModUtilsUtils.getUpgradeCount(itemHandler, UPGRADE_SLOTS, ModItemsUtils.TERRAFORM_PLACER_UPGRADE.get()) != 0) {
             return;
         }
-        IItemHandler beItemHandler = getLinkedInventory();
+        IItemHandler beItemHandler = ItemStackHandlerUtils.getBlockCapabilityItemHandler(level, pos, Direction.UP);
         if(beItemHandler == null) return;
         for (int slot : OUTPUT_SLOTS) {
             for (int i = 0; i < beItemHandler.getSlots(); i++) {
@@ -329,10 +306,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
 
     private boolean processNextBlock() {
         if (level == null || level.isClientSide()) return false;
-        if (!hasEnoughEnergy()) {
-            return false;
-        }
-
+        
         // Verifica se há Range Cards válidos
         boolean hasValidRangeCard = false;
         for (int slot : UPGRADE_SLOTS) {
@@ -443,26 +417,19 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
                                 ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
                             }
                             processed = TerraformPlacer.placeBlock(this, target, OUTPUT_SLOTS, UPGRADE_SLOTS, player);
-                            if(processed){
-                                ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
-                            }
                         }
                     } else {
                         if (hasMiner) {
                             if (hasEmptySlot()) {
+                                ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
                                 processed = TerraformMiner.mineBlock(this, target, OUTPUT_SLOTS, UPGRADE_SLOTS, player);
-                                if(processed){
-                                    ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
-                                }
                             } else {
                                 // Não há slot livre: PAUSA, não avança workX/Y/Z
                                 return false;
                             }
                         } else if (hasClear) {
+                            ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
                             processed = TerraformClear.clearBlock(this, target, UPGRADE_SLOTS, player);
-                            if(processed){
-                                ModUtilsUtils.damageRangeCard(itemHandler, UPGRADE_SLOTS);
-                            }
                         }
                     }
                 }
@@ -494,7 +461,6 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
             }
 
             if (processed) {
-                extractEnergy();
                 return false;
             }
         }
@@ -503,7 +469,6 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
         workX = workY = workZ = 0;
         return true;
     }
-    // Em TerraformBlockEntity.java
 
     private boolean hasBlockInSlots() {
         for (int slot = 0; slot < OUTPUT_SLOTS.length; slot++) {
@@ -525,17 +490,23 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
 
     private void extractEnergy() {
         int energy = ModConfigs.terraformEnergyCostPerOperation;
+        int speed = Math.max(ModUtils.getSpeed(itemHandler, UPGRADE_SLOTS), 2);
         int strength = (ModUtils.getStrength(itemHandler, UPGRADE_SLOTS) * 10);
 
-        int extractEnergy = energy + strength;
+        int var1 = energy * speed;
+
+        int extractEnergy = var1 + strength;
         EnergyUtils.extractEnergy(ENERGY_STORAGE, extractEnergy, false);
     }
 
     private boolean hasEnoughEnergy() {
         int energy = ModConfigs.terraformEnergyCostPerOperation;
+        int speed = Math.max(ModUtils.getSpeed(itemHandler, UPGRADE_SLOTS), 2);
         int strength = (ModUtils.getStrength(itemHandler, UPGRADE_SLOTS) * 10);
 
-        int extractEnergy = energy + strength;
+        int var1 = energy * speed;
+
+        int extractEnergy = var1 + strength;
         return ENERGY_STORAGE.getEnergyStored() >= extractEnergy;
     }
 
@@ -552,7 +523,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
     }
 
     private void increaseCraftingProgress() {
-        progress++;
+        progress += ModUtilsUtils.getUpgradeCount(itemHandler, UPGRADE_SLOTS, ModItems.SPEED_UPGRADE.get()) + 1;
     }
 
     private void verifySolidFuel(){
@@ -623,7 +594,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
     public void setTerraformingEnabled(boolean enabled) {
         if (enabled) {
             int currentVolume = sizeX * sizeY * sizeZ;
-            int maxVolume = getMaxVolume()[0];
+            int maxVolume = getMaxVolume();
 
             if (currentVolume > maxVolume) {
                 adjustAreaToFitVolume(maxVolume);
@@ -631,6 +602,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
         }
 
         this.terraformingEnabled = enabled;
+        System.out.println("setTerraformingEnabled: "+this.terraformingEnabled);
         this.setChanged();
         if (level != null && !level.isClientSide()) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
@@ -694,7 +666,7 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
         int y = axis.equals("y") ? value : this.sizeY;
         int z = axis.equals("z") ? value : this.sizeZ;
 
-        int maxVolume = getMaxVolume()[0];
+        int maxVolume = getMaxVolume();
         int volume = x * y * z;
         if (volume > maxVolume) {
             while (x * y * z > maxVolume && value > 0) {
@@ -724,16 +696,17 @@ public class TerraformBlockEntity extends BlockEntity implements MenuProvider, A
     public int getOffsetY() { return offsetY; }
     public int getOffsetZ() { return offsetZ; }
 
-    public int[] getMaxVolume() {
+    public int getMaxVolume() {
         for (int slot : UPGRADE_SLOTS) {
             ItemStack stack = itemHandler.getStackInSlot(slot);
-            if (stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get())) {
-                Integer persistentRange = stack.get(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE_PERSISTENT.get());
+            if (stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get())) {
                 Integer range = stack.get(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get());
-                return new int[]{persistentRange, range};
+                if (range != null && range > 0) {
+                    return range;
+                }
             }
         }
-        return new int[]{ModConfigs.terraformDefaultArea, ModConfigs.terraformDefaultArea};
+        return ModConfigs.terraformDefaultArea;
     }
 
     @Override

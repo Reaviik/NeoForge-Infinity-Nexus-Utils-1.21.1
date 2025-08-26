@@ -24,11 +24,11 @@ public class ModUtilsUtils {
         for (int slot : upgradeSlots) {
             ItemStack stack = handler.getStackInSlot(slot);
             if (stack.is(ModItemsUtils.TERRAFORM_RANGE_UPGRADE.get()) && stack.has(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get())) {
-                int durability = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), ModConfigs.terraformDefaultArea);
+                int range = stack.getOrDefault(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), ModConfigs.terraformDefaultArea);
                 if (!ModConfigs.terraformCostCardExtraDurability) {
-                    stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), Math.max(ModConfigs.terraformDefaultArea, durability - 1));
+                    stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), Math.max(ModConfigs.terraformDefaultArea, range - 1));
                 } else {
-                    stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), Math.max(0, durability - 1));
+                    stack.set(UtilsDataComponents.TERRAFORM_RANGE_CARD_RANGE.get(), Math.max(0, range - 1));
                 }
                 break;
             }

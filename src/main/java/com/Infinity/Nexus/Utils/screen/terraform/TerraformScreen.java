@@ -299,7 +299,7 @@ public class TerraformScreen extends AbstractContainerScreen<TerraformMenu> {
                     int x = axis.equals("x") ? v : parseIntSafe(xEditBox.getValue());
                     int y = axis.equals("y") ? v : parseIntSafe(yEditBox.getValue());
                     int z = axis.equals("z") ? v : parseIntSafe(zEditBox.getValue());
-                    int maxVolume = menu.blockEntity.getMaxVolume()[0];
+                    int maxVolume = menu.blockEntity.getMaxVolume();
                     int volume = x * y * z;
 
                     if (volume > maxVolume) {
@@ -362,10 +362,14 @@ public class TerraformScreen extends AbstractContainerScreen<TerraformMenu> {
         pGuiGraphics.drawString(this.font,this.title,8,-9,0XFFFFFF);
 
         // Renderiza o valor do volume da área
-        int range[] = menu.blockEntity.getMaxVolume();
+        int sizeX = menu.blockEntity.getSizeX();
+        int sizeY = menu.blockEntity.getSizeY();
+        int sizeZ = menu.blockEntity.getSizeZ();
+        int volume = sizeX * sizeY * sizeZ;
+        int maxVolumeCard = menu.blockEntity.getMaxVolume();
         int maxVolumeConfig = ModConfigs.terraformMaxArea;
-        int maxVolume = Math.min(range[0], maxVolumeConfig);
-        pGuiGraphics.drawString(this.font, Component.literal("Área: " + range[1] + "/" + maxVolume), 80, 74, 0xFFFFFF);
+        int maxVolume = Math.min(maxVolumeCard, maxVolumeConfig);
+        pGuiGraphics.drawString(this.font, Component.literal("Área: " + volume + "/" + maxVolume), 80, 74, 0xFFFFFF);
 
         renderEnergyAreaTooltips(pGuiGraphics,pMouseX,pMouseY, x, y);
 
